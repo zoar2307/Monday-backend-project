@@ -20,7 +20,7 @@ export async function getBoards(req, res) {
 
 export async function getBoardById(req, res) {
 	try {
-		const boardId = req.params.id
+		const boardId = req.params.boardId
 		const board = await boardService.getById(boardId)
 		res.json(board)
 	} catch (err) {
@@ -72,16 +72,18 @@ export async function removeBoard(req, res) {
 	}
 }
 
-export async function addBoardMsg(req, res) {
+export async function addTaskConversation(req, res) {
 	const { loggedinUser } = req
 
 	try {
-		const boardId = req.params.id
+		const boardId = req.params.boardId
+		const groupId = req.params.groupId
+		const taskId = req.params.taskId
 		const msg = {
 			txt: req.body.txt,
 			by: loggedinUser,
 		}
-		const savedMsg = await boardService.addBoardMsg(boardId, msg)
+		const savedMsg = await boardService.addTaskConversation(boardId, groupId, taskId, msg)
 		res.json(savedMsg)
 	} catch (err) {
 		logger.error('Failed to update board', err)
@@ -89,12 +91,16 @@ export async function addBoardMsg(req, res) {
 	}
 }
 
-export async function removeBoardMsg(req, res) {
+export async function removeTaskConversation(req, res) {
 	try {
-		const boardId = req.params.id
+		const boardId = req.params.boardId
+		const groupId = req.params.groupId
+		const taskId = req.params.taskId
 		const { msgId } = req.params
+		console.log(boardId);
 
-		const removedId = await boardService.removeBoardMsg(boardId, msgId)
+
+		const removedId = await boardService.removeTaskConversation(boardId, groupId, taskId, msgId)
 		res.send(removedId)
 	} catch (err) {
 		logger.error('Failed to remove board msg', err)

@@ -13,8 +13,8 @@ export const boardService = {
 	getById,
 	add,
 	update,
-	addBoardMsg,
-	removeBoardMsg,
+	addTaskConversation,
+	removeTaskConversation,
 }
 
 async function query(filterBy = { title: '' }) {
@@ -99,31 +99,71 @@ async function update(board) {
 	}
 }
 
-async function addBoardMsg(boardId, msg) {
+
+async function addTaskConversation(boardId, groupId, taskId, msg) {
 	try {
-		const criteria = { _id: ObjectId.createFromHexString(boardId) }
+		const criteria = {
+			_id: ObjectId.createFromHexString(boardId),
+			"groups.id": groupId,
+			"groups.tasks.id": taskId
+		}
 		msg.id = makeId()
 
 		const collection = await dbService.getCollection('board')
-		await collection.updateOne(criteria, { $push: { msgs: msg } })
+
+		const result = await collection.updateOne(
+			criteria,
+			{ $push: { "groups.$[group].tasks.$[task].conversations": msg } },
+			{
+				arrayFilters: [
+					{ "group.id": groupId },
+					{ "task.id": taskId }
+				]
+			}
+		)
+
+		if (result.modifiedCount === 0) {
+			throw new Error(`No task found with the specified taskId: ${taskId}`)
+		}
 
 		return msg
 	} catch (err) {
-		logger.error(`cannot add board msg ${boardId}`, err)
+		logger.error(`Cannot add conversation message to task ${taskId} on board ${boardId}`, err)
 		throw err
 	}
 }
 
-async function removeBoardMsg(boardId, msgId) {
+
+async function removeTaskConversation(boardId, groupId, taskId, msgId) {
 	try {
-		const criteria = { _id: ObjectId.createFromHexString(boardId) }
+
+
+		const criteria = {
+			_id: ObjectId.createFromHexString(boardId),
+			"groups.id": groupId,
+			"groups.tasks.id": taskId
+		}
 
 		const collection = await dbService.getCollection('board')
-		await collection.updateOne(criteria, { $pull: { msgs: { id: msgId } } })
 
-		return msgId
+		const result = await collection.updateOne(
+			criteria,
+			{ $pull: { "groups.$[group].tasks.$[task].conversations": { id: msgId } } },
+			{
+				arrayFilters: [
+					{ "group.id": groupId },
+					{ "task.id": taskId }
+				]
+			}
+		)
+
+		if (result.modifiedCount === 0) {
+			throw new Error(`No conversation message found with msgId: ${msgId} in task ${taskId}`)
+		}
+
+		return msgId;
 	} catch (err) {
-		logger.error(`cannot add board msg ${boardId}`, err)
+		logger.error(`Cannot remove conversation message ${msgId} from task ${taskId} on board ${boardId}`, err)
 		throw err
 	}
 }
@@ -131,10 +171,9 @@ async function removeBoardMsg(boardId, msgId) {
 function _buildCriteria(filterBy) {
 	const criteria = {
 		title: { $regex: filterBy.title, $options: 'i' },
-		// status: { $gte: filterBy.status },
-		// status: { $gte: filterBy.priority },
-		// person: { $gte: filterBy.person },
-
+		status: { $gte: filterBy.status },
+		priority: { $gte: filterBy.priority },
+		person: { $gte: filterBy.person },
 	}
 
 	return criteria
