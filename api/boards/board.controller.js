@@ -1,4 +1,5 @@
 import { logger } from '../../services/logger.service.js'
+import { makeId } from '../../services/util.service.js'
 import { boardService } from './board.service.js'
 
 export async function getBoards(req, res) {
@@ -31,9 +32,62 @@ export async function getBoardById(req, res) {
 
 export async function addBoard(req, res) {
 	const { loggedinUser, body: board } = req
-
 	try {
 		board.owner = loggedinUser
+		board.isStarred = false
+		board.archivedAt = null
+		board.labels = [
+			{ id: "l101", title: "Done", color: "#01c875", type: "status" },
+			{ id: "l102", title: "Stuck", color: "#e02f4b", type: "status" },
+			{ id: "l103", title: "Working on it", color: "#fdbb63", type: "status" },
+			{ id: "l104", title: "Bonus", color: "#b57ce3", type: "status" },
+			{ id: "l105", title: "Coming soon", color: "#7aaffd", type: "status" },
+			{ id: "l106", title: "High", color: "#6545a9", type: "priority" },
+			{ id: "l107", title: "Medium", color: "#777ae5", type: "priority" },
+			{ id: "l108", title: "Low", color: "#7aaffd", type: "priority" },
+			{ id: "l109", title: "Critical", color: "#5c5c5c", type: "priority" }
+		]
+		board.members = []
+		board.groups = [
+			{
+				"id": "g10a",
+				"title": "Group title",
+				"color": "#e02f4b",
+				"tasks": [
+					{
+						"id": makeId(),
+						"title": "Item 1",
+						"assignedTo": [],
+						"status": "Working on it",
+						"priority": "High",
+						"conversation": []
+					},
+					{
+						"id": makeId(),
+						"title": "Item 2",
+						"assignedTo": [],
+						"status": "Working on it",
+						"priority": "High",
+						"conversation": []
+					},
+					{
+						"id": makeId(),
+						"title": "Item 3",
+						"assignedTo": [],
+						"status": "Working on it",
+						"priority": "High",
+						"conversation": []
+					},
+
+				]
+			}
+
+
+		]
+		board.activities = []
+		board.cmpsLabels = []
+
+
 		const addedBoard = await boardService.add(board)
 		res.json(addedBoard)
 	} catch (err) {
@@ -44,13 +98,13 @@ export async function addBoard(req, res) {
 
 export async function updateBoard(req, res) {
 	const { loggedinUser, body: board } = req
-	const { _id: userId, isAdmin } = loggedinUser
+	// const { _id: userId, isAdmin } = loggedinUser
 
-	if (!isAdmin && board.owner._id !== userId) {
-		res.status(403).send('Not your board...')
-		return
-	}
-
+	// if (!isAdmin && board.owner._id !== userId) {
+	// 	res.status(403).send('Not your board...')
+	// 	return
+	// }
+	// console.log(board.groups[0].tasks)
 	try {
 		const updatedBoard = await boardService.update(board)
 		res.json(updatedBoard)
@@ -97,7 +151,6 @@ export async function removeTaskConversation(req, res) {
 		const groupId = req.params.groupId
 		const taskId = req.params.taskId
 		const { msgId } = req.params
-		console.log(boardId);
 
 
 		const removedId = await boardService.removeTaskConversation(boardId, groupId, taskId, msgId)
@@ -107,3 +160,4 @@ export async function removeTaskConversation(req, res) {
 		res.status(400).send({ err: 'Failed to remove board msg' })
 	}
 }
+

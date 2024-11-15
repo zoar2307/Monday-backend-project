@@ -24,10 +24,8 @@ async function query(filterBy = { title: '' }) {
 
 		const collection = await dbService.getCollection('board')
 
-		var boardCursor = await collection.find(criteria)
+		var boards = await collection.find(criteria).toArray()
 		// var boardCursor = await collection.find(criteria, { sort })
-
-		const boards = boardCursor.toArray()
 		return boards
 	} catch (err) {
 		logger.error('cannot find boards', err)
@@ -36,13 +34,16 @@ async function query(filterBy = { title: '' }) {
 }
 
 async function getById(boardId) {
+
 	try {
 		const criteria = { _id: ObjectId.createFromHexString(boardId) }
 
 		const collection = await dbService.getCollection('board')
 		const board = await collection.findOne(criteria)
 
+
 		board.createdAt = board._id.getTimestamp()
+
 		return board
 	} catch (err) {
 		logger.error(`while finding board ${boardId}`, err)
@@ -84,7 +85,15 @@ async function add(board) {
 }
 
 async function update(board) {
-	const boardToSave = { vendor: board.vendor, speed: board.speed }
+	const boardToSave = {
+		title: board.title,
+		groups: board.groups,
+		cmpsLabels: board.cmpsLabels,
+		labels: board.labels,
+		members: board.members,
+		activities: board.activities,
+		isStarred: board.isStarred,
+	}
 
 	try {
 		const criteria = { _id: ObjectId.createFromHexString(board._id) }
@@ -171,9 +180,9 @@ async function removeTaskConversation(boardId, groupId, taskId, msgId) {
 function _buildCriteria(filterBy) {
 	const criteria = {
 		title: { $regex: filterBy.title, $options: 'i' },
-		status: { $gte: filterBy.status },
-		priority: { $gte: filterBy.priority },
-		person: { $gte: filterBy.person },
+		// status: { $gte: filterBy.status },
+		// priority: { $gte: filterBy.priority },
+		// person: { $gte: filterBy.person },
 	}
 
 	return criteria
