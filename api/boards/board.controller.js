@@ -1,4 +1,5 @@
 import { logger } from '../../services/logger.service.js'
+import { socketService } from '../../services/socket.service.js'
 import { makeId } from '../../services/util.service.js'
 import { boardService } from './board.service.js'
 
@@ -104,9 +105,12 @@ export async function updateBoard(req, res) {
 	// 	res.status(403).send('Not your board...')
 	// 	return
 	// }
-	// console.log(board.groups[0].tasks)
+
 	try {
 		const updatedBoard = await boardService.update(board)
+
+		// Sent emit to all users but not to the who updated the board
+		socketService.broadcast({ type: 'board-update', data: updatedBoard, userId: loggedinUser._id })
 		res.json(updatedBoard)
 	} catch (err) {
 		logger.error('Failed to update board', err)
