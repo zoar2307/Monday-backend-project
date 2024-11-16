@@ -1,3 +1,4 @@
+import { Socket } from 'socket.io'
 import { logger } from '../../services/logger.service.js'
 import { socketService } from '../../services/socket.service.js'
 import { makeId } from '../../services/util.service.js'
@@ -13,6 +14,7 @@ export async function getBoards(req, res) {
 			// sortDir: req.query.sortDir || 1,
 		}
 		const boards = await boardService.query(filterBy)
+
 		res.json(boards)
 	} catch (err) {
 		logger.error('Failed to get boards', err)
@@ -48,7 +50,7 @@ export async function addBoard(req, res) {
 			{ id: "l108", title: "Low", color: "#7aaffd", type: "priority" },
 			{ id: "l109", title: "Critical", color: "#5c5c5c", type: "priority" }
 		]
-		board.members = []
+		board.members = [loggedinUser]
 		board.groups = [
 			{
 				"id": "g10a",
@@ -77,16 +79,20 @@ export async function addBoard(req, res) {
 						"assignedTo": [],
 						"status": "Working on it",
 						"priority": "High",
-						"conversation": []
+						"conversation": [
+
+						]
 					},
 
 				]
 			}
 
-
 		]
 		board.activities = []
-		board.cmpsLabels = []
+		board.cmpsLabels = [
+			{ type: 'MemberPicker', title: 'Person', id: makeId(), class: 'members' },
+			{ type: 'StatusPicker', title: 'Status', id: makeId(), class: 'status' },
+			{ type: 'PriorityPicker', title: 'Priority', id: makeId(), class: 'priority' },]
 
 
 		const addedBoard = await boardService.add(board)
