@@ -39,10 +39,10 @@ export async function deleteUser(req, res) {
 export async function updateUser(req, res) {
     try {
         const user = req.body
-        console.log(`user-back:`, user)
 
         const savedUser = await userService.update(user)
         console.log(`user-back-saved:`, savedUser)
+        socketService.broadcast({ type: 'user-update', data: savedUser, userId: 'server' })
 
         res.send(savedUser)
     } catch (err) {
