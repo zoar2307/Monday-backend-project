@@ -93,6 +93,7 @@ async function update(board) {
 		members: board.members,
 		activities: board.activities,
 		isStarred: board.isStarred,
+		owner: board.owner
 	}
 
 	try {

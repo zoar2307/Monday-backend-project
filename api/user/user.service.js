@@ -79,16 +79,48 @@ async function remove(userId) {
 
 async function update(user) {
     try {
-        // peek only updatable properties
+        // Peek only updatable properties
         const userToSave = {
-            _id: ObjectId.createFromHexString(user._id), // needed for the returnd obj
-            fullname: user.fullname,
+            _id: ObjectId.createFromHexString(user._id), // Needed for the returned object
+            imgUrl: user.imgUrl,
+            fullname: user.fullname
         }
-        const collection = await dbService.getCollection('user')
-        await collection.updateOne({ _id: userToSave._id }, { $set: userToSave })
+
+        // Update in 'user' collection
+        const userCollection = await dbService.getCollection('user')
+        await userCollection.updateOne(
+            { _id: userToSave._id },
+            { $set: userToSave }
+        )
+
+        // Update members' imgUrl in 'board' collection
+        const boardCollection = await dbService.getCollection('board')
+        await boardCollection.updateMany(
+            { "owner._id": user._id },
+            {
+                $set: {
+                    "owner.imgUrl": "https://res.cloudinary.com/dafozl1ej/image/upload/v1731763550/WhatsApp_Image_2024-11-07_at_13.51.54_yzsrkn.jpg"
+                }
+            }
+        );
+
+
+
+        await boardCollection.updateMany(
+            { "members._id": user._id }, // Match any board with this member
+            { $set: { "members.$.imgUrl": userToSave.imgUrl } } // Update imgUrl of the matched member
+        )
+
+        // Update owner's imgUrl in 'board' collection
+        // await boardCollection.updateMany(
+        //     { 'owner._id': userToSave._id }, // Match any board with this owner
+        //     { $set: { "owner.imgUrl": userToSave.imgUrl } } // Update imgUrl of the owner
+        // )
+
+        // Return the updated user object
         return userToSave
     } catch (err) {
-        logger.error(`cannot update user ${user._id}`, err)
+        logger.error(`Cannot update user ${user._id}, ${err}`)
         throw err
     }
 }
