@@ -22,6 +22,7 @@
     "express": "^4.17.1",
     "google-auth-library": "^9.15.0",
     "mongodb": "^6.6.2",
+    "openai": "^4.72.0",
     "socket.io": "^4.2.0"
   },
   "devDependencies": {
