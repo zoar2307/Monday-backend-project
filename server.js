@@ -11,6 +11,9 @@ import { boardRoutes } from './api/boards/board.routes.js'
 import { setupSocketAPI } from './services/socket.service.js'
 
 import { setupAsyncLocalStorage } from './middlewares/setupAls.middleware.js'
+import dotenv from 'dotenv';
+
+dotenv.config()
 
 const app = express()
 const server = http.createServer(app)
@@ -36,7 +39,6 @@ app.all('*', setupAsyncLocalStorage)
 
 app.use('/api/auth', authRoutes)
 app.use('/api/user', userRoutes)
-// app.use('/api/review', reviewRoutes)
 app.use('/api/board', boardRoutes)
 
 setupSocketAPI(server)

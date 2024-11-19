@@ -10,6 +10,7 @@ export const userService = {
     remove, // Delete (remove user)
     query, // List (of users)
     getByUsername, // Used for Login
+    getByGoogleId// Used for Login with google
 }
 
 async function query(filterBy = {}) {
@@ -58,6 +59,16 @@ async function getByUsername(username) {
     try {
         const collection = await dbService.getCollection('user')
         const user = await collection.findOne({ username })
+        return user
+    } catch (err) {
+        logger.error(`while finding user by username: ${username}`, err)
+        throw err
+    }
+}
+async function getByGoogleId(googleId) {
+    try {
+        const collection = await dbService.getCollection('user')
+        const user = await collection.findOne({ googleId })
         return user
     } catch (err) {
         logger.error(`while finding user by username: ${username}`, err)
@@ -127,14 +138,22 @@ async function update(user) {
 
 async function add(user) {
     try {
+        let userToAdd
         // peek only updatable fields!
-        const userToAdd = {
-            username: user.username,
-            password: user.password,
-            fullname: user.fullname,
-            imgUrl: user.imgUrl,
-            isAdmin: user.isAdmin,
+        if (user.googleId) {
+            userToAdd = {
+                ...user,
+            }
+        } else {
+            userToAdd = {
+                username: user.username,
+                password: user.password,
+                fullname: user.fullname,
+                imgUrl: user.imgUrl,
+                isAdmin: user.isAdmin,
+            }
         }
+
         const collection = await dbService.getCollection('user')
         await collection.insertOne(userToAdd)
         return userToAdd
@@ -159,3 +178,4 @@ function _buildCriteria(filterBy) {
     }
     return criteria
 }
+

@@ -47,3 +47,16 @@ export async function logout(req, res) {
 		res.status(400).send({ err: 'Failed to logout' })
 	}
 }
+
+export async function loginGoogle(req, res) {
+	try {
+		const { token } = req.body
+		const user = await authService.verifyGoogleToken(token)
+		console.log("userBackFormBackend: !!!!!!!", user)
+
+		res.json(user)
+	} catch (err) {
+		logger.error('Failed to update user', err)
+		res.status(401).json({ success: false, message: 'Invalid token' })
+	}
+}
